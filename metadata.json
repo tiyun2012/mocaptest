@@ -1,0 +1,8 @@
+{
+  "name": "Gemini Motion-to-3D",
+  "description": "A 3D motion capture tool that uses Gemini to analyze video and convert it into animation data for 3D software (Maya/Unreal). Features a Y-up 3D viewer and BVH-style JSON export.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
