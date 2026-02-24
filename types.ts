@@ -13,6 +13,8 @@ export interface JointPositions {
   r_elbow: Vector3;
   l_hand: Vector3;
   r_hand: Vector3;
+  l_fingers: Vector3;
+  r_fingers: Vector3;
   spine: Vector3;
   l_hip: Vector3;
   r_hip: Vector3;
@@ -20,6 +22,8 @@ export interface JointPositions {
   r_knee: Vector3;
   l_foot: Vector3;
   r_foot: Vector3;
+  l_toe: Vector3;
+  r_toe: Vector3;
 }
 
 export interface AnimationFrame {
@@ -48,11 +52,15 @@ export const INITIAL_JOINTS: JointPositions = {
   r_elbow: { x: -0.3, y: 1.1, z: 0 },
   l_hand: { x: 0.35, y: 0.8, z: 0 },
   r_hand: { x: -0.35, y: 0.8, z: 0 },
+  l_fingers: { x: 0.35, y: 0.7, z: 0 },
+  r_fingers: { x: -0.35, y: 0.7, z: 0 },
   spine: { x: 0, y: 1.0, z: 0 },
   l_hip: { x: 0.15, y: 0.9, z: 0 },
   r_hip: { x: -0.15, y: 0.9, z: 0 },
   l_knee: { x: 0.15, y: 0.5, z: 0 },
   r_knee: { x: -0.15, y: 0.5, z: 0 },
-  l_foot: { x: 0.15, y: 0.0, z: 0.1 },
-  r_foot: { x: -0.15, y: 0.0, z: 0.1 },
+  l_foot: { x: 0.15, y: 0.1, z: 0.1 },
+  r_foot: { x: -0.15, y: 0.1, z: 0.1 },
+  l_toe: { x: 0.15, y: 0.0, z: 0.2 },
+  r_toe: { x: -0.15, y: 0.0, z: 0.2 },
 };

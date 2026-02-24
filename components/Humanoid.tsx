@@ -44,12 +44,17 @@ const Humanoid: React.FC<HumanoidProps> = ({ joints }) => {
       <JointSphere position={joints.r_elbow} />
       <JointSphere position={joints.l_hand} color="#10b981" />
       <JointSphere position={joints.r_hand} color="#10b981" />
+      <JointSphere position={joints.l_fingers} color="#34d399" size={0.04} />
+      <JointSphere position={joints.r_fingers} color="#34d399" size={0.04} />
+      
       <JointSphere position={joints.l_hip} />
       <JointSphere position={joints.r_hip} />
       <JointSphere position={joints.l_knee} />
       <JointSphere position={joints.r_knee} />
       <JointSphere position={joints.l_foot} color="#f59e0b" />
       <JointSphere position={joints.r_foot} color="#f59e0b" />
+      <JointSphere position={joints.l_toe} color="#fbbf24" size={0.04} />
+      <JointSphere position={joints.r_toe} color="#fbbf24" size={0.04} />
 
       {/* Bones - Torso */}
       <Bone start={joints.head} end={joints.neck} />
@@ -63,14 +68,18 @@ const Humanoid: React.FC<HumanoidProps> = ({ joints }) => {
       {/* Bones - Arms */}
       <Bone start={joints.l_shoulder} end={joints.l_elbow} />
       <Bone start={joints.l_elbow} end={joints.l_hand} />
+      <Bone start={joints.l_hand} end={joints.l_fingers} />
       <Bone start={joints.r_shoulder} end={joints.r_elbow} />
       <Bone start={joints.r_elbow} end={joints.r_hand} />
+      <Bone start={joints.r_hand} end={joints.r_fingers} />
 
       {/* Bones - Legs */}
       <Bone start={joints.l_hip} end={joints.l_knee} />
       <Bone start={joints.l_knee} end={joints.l_foot} />
+      <Bone start={joints.l_foot} end={joints.l_toe} />
       <Bone start={joints.r_hip} end={joints.r_knee} />
       <Bone start={joints.r_knee} end={joints.r_foot} />
+      <Bone start={joints.r_foot} end={joints.r_toe} />
     </group>
   );
 };
