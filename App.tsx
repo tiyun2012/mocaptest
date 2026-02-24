@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Scene3D from './components/Scene3D';
 import ControlPanel from './components/ControlPanel';
 import { AppState, JointPositions, MotionData, INITIAL_JOINTS } from './types';
-import { analyzeMotion } from './services/geminiService';
+import { analyzeMotion } from './services/motionService';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -12,19 +12,46 @@ const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   
-  // Ref to hold the interval ID
-  const playbackIntervalRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const currentJoints: JointPositions = motionData?.frames[currentFrameIndex]?.joints || INITIAL_JOINTS;
 
-  // Cleanup interval on unmount
+  // Create video URL
+  const videoUrl = useMemo(() => {
+    return videoFile ? URL.createObjectURL(videoFile) : null;
+  }, [videoFile]);
+
+  // Cleanup video URL
   useEffect(() => {
     return () => {
-      if (playbackIntervalRef.current) {
-        window.clearInterval(playbackIntervalRef.current);
+      if (videoUrl) URL.revokeObjectURL(videoUrl);
+    };
+  }, [videoUrl]);
+
+  // Sync loop: Update frame index based on video time
+  useEffect(() => {
+    let rAF: number;
+    
+    const loop = () => {
+      if (videoRef.current && motionData && isPlaying) {
+         const t = videoRef.current.currentTime;
+         const frame = Math.floor(t * motionData.fps);
+         
+         // Ensure we don't go out of bounds
+         if (frame < motionData.frames.length) {
+             setCurrentFrameIndex(frame);
+         }
+         
+         rAF = requestAnimationFrame(loop);
       }
     };
-  }, []);
+
+    if (isPlaying) {
+        rAF = requestAnimationFrame(loop);
+    }
+
+    return () => cancelAnimationFrame(rAF);
+  }, [isPlaying, motionData]);
 
   const handleFileUpload = (file: File) => {
     setVideoFile(file);
@@ -32,6 +59,9 @@ const App: React.FC = () => {
     setMotionData(null);
     setCurrentFrameIndex(0);
     setProgress(0);
+    if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+    }
   };
 
   const handleAnalyze = async () => {
@@ -45,9 +75,11 @@ const App: React.FC = () => {
       setCurrentFrameIndex(0);
       setAppState(AppState.IDLE); // Ready to play
       setProgress(100);
+      if (videoRef.current) {
+          videoRef.current.currentTime = 0;
+      }
     } catch (error: any) {
       console.error("Analysis failed:", error);
-      // Use the specific error message thrown from the service
       alert(`Analysis Failed: ${error.message || "Unknown Error"}`);
       setAppState(AppState.IDLE);
       setProgress(0);
@@ -55,33 +87,19 @@ const App: React.FC = () => {
   };
 
   const togglePlay = useCallback(() => {
-    if (!motionData) return;
+    if (!videoRef.current) return;
 
-    if (isPlaying) {
-      // Pause
-      setIsPlaying(false);
-      if (playbackIntervalRef.current) {
-        window.clearInterval(playbackIntervalRef.current);
-        playbackIntervalRef.current = null;
-      }
+    if (videoRef.current.paused) {
+        // If we are at the end, restart
+        if (videoRef.current.ended || (motionData && currentFrameIndex >= motionData.frames.length - 1)) {
+            videoRef.current.currentTime = 0;
+            setCurrentFrameIndex(0);
+        }
+        videoRef.current.play().catch(e => console.error("Play failed", e));
     } else {
-      // Play
-      setIsPlaying(true);
-      const fps = motionData.fps || 10;
-      const intervalMs = 1000 / fps;
-
-      playbackIntervalRef.current = window.setInterval(() => {
-        setCurrentFrameIndex((prev) => {
-          const next = prev + 1;
-          if (next >= motionData.frames.length) {
-            // Loop or stop
-            return 0; 
-          }
-          return next;
-        });
-      }, intervalMs);
+        videoRef.current.pause();
     }
-  }, [isPlaying, motionData]);
+  }, [motionData, currentFrameIndex]);
 
   const handleExport = () => {
     if (!motionData) return;
@@ -93,16 +111,6 @@ const App: React.FC = () => {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   };
-
-  // Sync isPlaying state changes to start/stop loop
-  useEffect(() => {
-      // This effect just ensures that if the component re-renders while playing, logic holds.
-      // But the togglePlay logic handles the interval directly. 
-      // We need to ensure we clear interval if we navigate away or data is cleared.
-      if (!motionData && playbackIntervalRef.current) {
-          window.clearInterval(playbackIntervalRef.current);
-      }
-  }, [motionData]);
 
   return (
     <div className="flex h-screen bg-slate-900 text-white font-sans selection:bg-indigo-500/30">
@@ -116,7 +124,7 @@ const App: React.FC = () => {
         onExport={handleExport}
         frameIndex={currentFrameIndex}
         totalFrames={motionData?.frames.length || 0}
-        fps={motionData?.fps || 10}
+        fps={motionData?.fps || 30}
         progress={progress}
       />
       
@@ -130,16 +138,41 @@ const App: React.FC = () => {
              </div>
              {motionData && (
                  <div className="text-xs text-slate-500 font-mono">
-                     {motionData.frames.length} frames captured
+                     {motionData.frames.length} frames captured @ {motionData.fps} FPS
                  </div>
              )}
         </header>
 
-        <div className="flex-1 min-h-0">
-            <Scene3D currentJoints={currentJoints} hasData={!!motionData} />
+        <div className="flex-1 min-h-0 flex gap-4">
+            {/* 3D View */}
+            <div className="flex-1 relative bg-slate-950 rounded-lg overflow-hidden border border-slate-700/50 shadow-inner">
+                <Scene3D currentJoints={currentJoints} hasData={!!motionData} />
+                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded text-xs font-medium text-white/90 pointer-events-none border border-white/10">
+                    3D Reconstruction
+                </div>
+            </div>
+
+            {/* Video View - Only if video exists */}
+            {videoUrl && (
+                <div className="flex-1 relative bg-black rounded-lg overflow-hidden border border-slate-700/50 shadow-inner flex items-center justify-center">
+                    <video 
+                        ref={videoRef}
+                        src={videoUrl}
+                        className="max-w-full max-h-full"
+                        muted
+                        playsInline
+                        onEnded={() => setIsPlaying(false)}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                    />
+                     <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded text-xs font-medium text-white/90 pointer-events-none border border-white/10">
+                        Reference Video
+                    </div>
+                </div>
+            )}
         </div>
 
-        {/* Timeline visualization (Simple) */}
+        {/* Timeline visualization */}
         {motionData && (
             <div className="mt-4 h-12 bg-slate-800 rounded border border-slate-700 flex items-center px-4 overflow-hidden relative">
                  <div className="absolute inset-0 flex space-x-[2px] opacity-20">
@@ -149,7 +182,7 @@ const App: React.FC = () => {
                     ))}
                  </div>
                  <div 
-                    className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10 transition-all duration-100 linear"
+                    className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10 transition-all duration-75 linear"
                     style={{ left: `${(currentFrameIndex / (motionData.frames.length - 1)) * 100}%`}}
                  ></div>
             </div>

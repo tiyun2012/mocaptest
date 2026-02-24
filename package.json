@@ -9,13 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "^19.2.4",
-    "lucide-react": "^0.575.0",
     "@google/genai": "^1.42.0",
-    "react": "^19.2.4",
+    "@mediapipe/pose": "^0.5.1675469404",
+    "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
-    "three": "^0.183.1",
-    "@react-three/drei": "^10.7.7"
+    "lucide-react": "^0.575.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "three": "^0.183.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

@@ -58,7 +58,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     <div className="w-80 flex flex-col gap-6 bg-slate-800 p-6 border-r border-slate-700 overflow-y-auto">
       <div>
         <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2">
-          Gemini Mocap
+          AI Motion Capture
         </h1>
         <p className="text-slate-400 text-sm">
           Video to 3D Motion Extractor
@@ -196,9 +196,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       </div>
 
       <div className="mt-auto pt-6 border-t border-slate-700 text-xs text-slate-500">
-        <p>Model: Gemini 3.0 Flash Preview</p>
+        <p>Model: MediaPipe Pose (Client-side)</p>
         <p className="mt-1">Use a clear video with full body visibility.</p>
-        <p className="mt-1 text-amber-500/80">Note: Analyzes up to 60s of video.</p>
+        <p className="mt-1 text-amber-500/80">Note: Processing happens locally in your browser.</p>
       </div>
     </div>
   );
