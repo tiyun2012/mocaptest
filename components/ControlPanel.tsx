@@ -14,6 +14,7 @@ interface ControlPanelProps {
   totalFrames: number;
   fps: number;
   progress: number;
+  motionLabel?: string | null;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -27,7 +28,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   frameIndex,
   totalFrames,
   fps,
-  progress
+  progress,
+  motionLabel
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -163,6 +165,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                   <span className="text-xs text-slate-400">FPS: {fps}</span>
                   <span className="text-xs text-slate-400">Frame: {frameIndex} / {totalFrames}</span>
               </div>
+              {motionLabel && (
+                  <div className="mb-3 px-2 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded text-center">
+                      <span className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+                          Action: {motionLabel}
+                      </span>
+                  </div>
+              )}
               <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
                   <div 
                       className="bg-indigo-500 h-full transition-all duration-100 ease-linear"

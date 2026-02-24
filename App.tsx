@@ -3,6 +3,7 @@ import Scene3D from './components/Scene3D';
 import ControlPanel from './components/ControlPanel';
 import { AppState, JointPositions, MotionData, INITIAL_JOINTS } from './types';
 import { analyzeMotion } from './services/motionService';
+import { identifyMotion } from './services/geminiService';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -11,6 +12,7 @@ const App: React.FC = () => {
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [motionLabel, setMotionLabel] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -57,6 +59,7 @@ const App: React.FC = () => {
     setVideoFile(file);
     setAppState(AppState.IDLE);
     setMotionData(null);
+    setMotionLabel(null);
     setCurrentFrameIndex(0);
     setProgress(0);
     if (videoRef.current) {
@@ -69,6 +72,7 @@ const App: React.FC = () => {
 
     setAppState(AppState.PROCESSING);
     setProgress(0);
+    setMotionLabel(null);
     try {
       const data = await analyzeMotion(videoFile, (p) => setProgress(p));
       setMotionData(data);
@@ -78,6 +82,10 @@ const App: React.FC = () => {
       if (videoRef.current) {
           videoRef.current.currentTime = 0;
       }
+      
+      // Identify action in background
+      identifyMotion(data).then(label => setMotionLabel(label));
+
     } catch (error: any) {
       console.error("Analysis failed:", error);
       alert(`Analysis Failed: ${error.message || "Unknown Error"}`);
@@ -126,6 +134,7 @@ const App: React.FC = () => {
         totalFrames={motionData?.frames.length || 0}
         fps={motionData?.fps || 30}
         progress={progress}
+        motionLabel={motionLabel}
       />
       
       <main className="flex-1 p-4 flex flex-col min-w-0">
